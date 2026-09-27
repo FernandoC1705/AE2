@@ -18,7 +18,7 @@ public class Menu {
 
             System.out.println();
             System.out.println("======================================");
-            System.out.println("        SISTEMA UNIVERSITARIO");
+            System.out.println("        SISTEMA UNIVERSITARIOfgsdfs");
             System.out.println("======================================");
             System.out.println("1. Matricular alumno a una carrera");
             System.out.println("2. Inscribir alumno a una materia");
