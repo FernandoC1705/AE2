@@ -2,38 +2,45 @@ import java.util.ArrayList;
 
 public class Universidad {
 
+    private static Universidad instancia;
+
     private ArrayList<Carrera> carreras;
     private ArrayList<Alumno> alumnos;
 
-    public Universidad() {
-
+    private Universidad() {
         carreras = new ArrayList<>();
         alumnos = new ArrayList<>();
-
         inicializarSistema();
+    }
+
+    public static Universidad getInstancia() {
+        if (instancia == null) {
+            instancia = new Universidad();
+        }
+        return instancia;
     }
 
     private void inicializarSistema() {
 
         Coordinador coordinador1 = new Coordinador(
-                "Carlos",
-                "Gomez",
+                "Juan",
+                "Perez",
                 "30123456",
-                "carlos@universidad.com"
+                "juan@universidad.com"
         );
 
         Coordinador coordinador2 = new Coordinador(
                 "Laura",
-                "Fernandez",
+                "Espindola",
                 "30234567",
                 "laura@universidad.com"
         );
 
         Profesor profesor1 = new Profesor(
-                "Juan",
-                "Perez",
+                "Pedro",
+                "Paez",
                 "28123456",
-                "juan@universidad.com"
+                "pedro@universidad.com"
         );
 
         Profesor profesor2 = new Profesor(
@@ -94,7 +101,6 @@ public class Universidad {
                 profesor3
         );
 
-
         carrera1.agregarMateria(sistemas1);
         carrera1.agregarMateria(sistemas2);
         carrera1.agregarMateria(sistemas3);
@@ -128,7 +134,6 @@ public class Universidad {
                 profesor1
         );
 
-
         carrera2.agregarMateria(administracion1);
         carrera2.agregarMateria(administracion2);
         carrera2.agregarMateria(administracion3);
@@ -153,7 +158,6 @@ public class Universidad {
     public Alumno buscarAlumnoPorLegajo(int legajo) {
 
         for (Alumno alumno : alumnos) {
-
             if (alumno.getLegajo() == legajo) {
                 return alumno;
             }
@@ -165,7 +169,6 @@ public class Universidad {
     public Carrera buscarCarrera(String nombre) {
 
         for (Carrera carrera : carreras) {
-
             if (carrera.getNombre().equalsIgnoreCase(nombre)) {
                 return carrera;
             }
@@ -197,4 +200,4 @@ public class Universidad {
             System.out.println(alumno);
         }
     }
-}
+}}
