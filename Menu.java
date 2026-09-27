@@ -3,11 +3,11 @@ import java.util.Scanner;
 public class Menu {
 
     private Scanner teclado;
-    private Universidad universidad;
+    private UniversidadFacade facade;
 
-    public Menu(Universidad universidad) {
-        this.universidad = universidad;
-        teclado = new Scanner(System.in);
+    public Menu() {
+        this.facade = new UniversidadFacade();
+        this.teclado = new Scanner(System.in);
     }
 
     public void mostrarMenu() {
@@ -18,7 +18,7 @@ public class Menu {
 
             System.out.println();
             System.out.println("======================================");
-            System.out.println("        SISTEMA UNIVERSITARIOfgsdfs");
+            System.out.println("        SISTEMA UNIVERSITARIO         ");
             System.out.println("======================================");
             System.out.println("1. Matricular alumno a una carrera");
             System.out.println("2. Inscribir alumno a una materia");
@@ -58,7 +58,7 @@ public class Menu {
                     break;
 
                 case 6:
-                    universidad.mostrarCarreras();
+                    facade.mostrarCarreras();
                     break;
 
                 case 7:
@@ -66,7 +66,7 @@ public class Menu {
                     break;
 
                 case 8:
-                    universidad.mostrarAlumnos();
+                    facade.mostrarAlumnos();
                     break;
 
                 case 0:
@@ -89,7 +89,7 @@ public class Menu {
         int legajo = teclado.nextInt();
         teclado.nextLine();
 
-        if (universidad.buscarAlumnoPorLegajo(legajo) != null) {
+        if (facade.existeAlumno(legajo)) {
             System.out.println("Ya existe un alumno con ese legajo.");
             return;
         }
@@ -108,44 +108,19 @@ public class Menu {
 
         System.out.println();
         System.out.println("Carreras disponibles:");
-
-        for (int i = 0; i < universidad.getCarreras().size(); i++) {
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            universidad.getCarreras().get(i).getNombre()
-            );
-        }
+        facade.mostrarCarrerasDisponibles();
 
         System.out.print("Seleccione una carrera: ");
         int opcionCarrera = teclado.nextInt();
         teclado.nextLine();
 
-        if (opcionCarrera < 1 ||
-                opcionCarrera > universidad.getCarreras().size()) {
+        boolean exito = facade.matricularAlumno(legajo, nombre, apellido, dni, email, opcionCarrera);
 
-            System.out.println("Carrera no valida.");
-            return;
+        if (exito) {
+            facade.imprimirResumenMatriculacion(legajo, nombre, apellido, opcionCarrera);
+        } else {
+            System.out.println("Ocurrio un error al matricular al alumno.");
         }
-
-        Carrera carrera =
-                universidad.getCarreras().get(opcionCarrera - 1);
-
-        Alumno alumno = new Alumno(
-                legajo,
-                nombre,
-                apellido,
-                dni,
-                email
-        );
-
-        alumno.matricularEnCarrera(carrera);
-        universidad.agregarAlumno(alumno);
-
-        System.out.println();
-        System.out.println("Alumno matriculado correctamente.");
-        System.out.println("Alumno: " + nombre + " " + apellido);
-        System.out.println("Carrera: " + carrera.getNombre());
     }
 
     private void inscribirAlumnoMateria() {
@@ -157,80 +132,21 @@ public class Menu {
         int legajo = teclado.nextInt();
         teclado.nextLine();
 
-        Alumno alumno = universidad.buscarAlumnoPorLegajo(legajo);
-
-        if (alumno == null) {
-
-            System.out.println("No existe un alumno con ese legajo.");
+        if (!facade.mostrarMateriasDeCarreraDelAlumno(legajo)) {
             return;
-        }
-
-        if (alumno.getCarrera() == null) {
-
-            System.out.println(
-                    "El alumno no esta matriculado en ninguna carrera."
-            );
-
-            return;
-        }
-
-        Carrera carrera = alumno.getCarrera();
-
-        System.out.println();
-        System.out.println("Carrera del alumno: " + carrera.getNombre());
-
-        System.out.println();
-        System.out.println("Materias disponibles:");
-
-        for (int i = 0; i < carrera.getMaterias().size(); i++) {
-
-            Materia materia = carrera.getMaterias().get(i);
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            materia.getNombre() +
-                            " | Curso: " + materia.getCurso() +
-                            " | Cuatrimestre: " + materia.getCuatrimestre() +
-                            " | Profesor: " + materia.getProfesor().getNombre()
-            );
         }
 
         System.out.print("Seleccione una materia: ");
         int opcionMateria = teclado.nextInt();
         teclado.nextLine();
 
-        if (opcionMateria < 1 ||
-                opcionMateria > carrera.getMaterias().size()) {
+        boolean exito = facade.inscribirAlumnoMateria(legajo, opcionMateria);
 
-            System.out.println("Materia no valida.");
-            return;
+        if (exito) {
+            System.out.println("\nInscripcion realizada correctamente.");
+        } else {
+            System.out.println("No se pudo realizar la inscripcion (opcion invalida o alumno ya inscripto).");
         }
-
-        Materia materia =
-                carrera.getMaterias().get(opcionMateria - 1);
-
-        if (alumno.estaInscriptoEn(materia)) {
-
-            System.out.println(
-                    "El alumno ya esta inscripto en esta materia."
-            );
-
-            return;
-        }
-
-        Inscripcion inscripcion =
-                new Inscripcion(alumno, materia);
-
-        alumno.agregarInscripcion(inscripcion);
-
-        System.out.println();
-        System.out.println("Inscripcion realizada correctamente.");
-        System.out.println("Alumno: " +
-                alumno.getNombre() + " " +
-                alumno.getApellido());
-
-        System.out.println("Materia: " +
-                materia.getNombre());
     }
 
     private void registrarAsistencia() {
@@ -242,76 +158,38 @@ public class Menu {
         int legajo = teclado.nextInt();
         teclado.nextLine();
 
-        Alumno alumno = universidad.buscarAlumnoPorLegajo(legajo);
-
-        if (alumno == null) {
-
-            System.out.println("Alumno no encontrado.");
+        if (!facade.mostrarInscripcionesAlumno(legajo)) {
             return;
-        }
-
-        if (alumno.getInscripciones().isEmpty()) {
-
-            System.out.println(
-                    "El alumno no esta inscripto en ninguna materia."
-            );
-
-            return;
-        }
-
-        System.out.println();
-        System.out.println("Materias del alumno:");
-
-        for (int i = 0; i < alumno.getInscripciones().size(); i++) {
-
-            Inscripcion inscripcion =
-                    alumno.getInscripciones().get(i);
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            inscripcion.getMateria().getNombre()
-            );
         }
 
         System.out.print("Seleccione una materia: ");
         int opcion = teclado.nextInt();
         teclado.nextLine();
 
-        if (opcion < 1 ||
-                opcion > alumno.getInscripciones().size()) {
+        System.out.print("¿El alumno estuvo presente? (S/N): ");
+        String respuesta = teclado.nextLine();
 
-            System.out.println("Opcion no valida.");
+        boolean presente;
+        if (respuesta.equalsIgnoreCase("S")) {
+            presente = true;
+        } else if (respuesta.equalsIgnoreCase("N")) {
+            presente = false;
+        } else {
+            System.out.println("Respuesta no valida.");
             return;
         }
 
-        Inscripcion inscripcion =
-                alumno.getInscripciones().get(opcion - 1);
+        boolean exito = facade.registrarAsistencia(legajo, opcion, presente);
 
-        System.out.print(
-                "¿El alumno estuvo presente? (S/N): "
-        );
-
-        String respuesta = teclado.nextLine();
-
-        if (respuesta.equalsIgnoreCase("S")) {
-
-            inscripcion.registrarAsistencia();
-
-            System.out.println("Asistencia registrada.");
-
-        } else if (respuesta.equalsIgnoreCase("N")) {
-
-            inscripcion.registrarInasistencia();
-
-            System.out.println("Inasistencia registrada.");
-            System.out.println(
-                    "Total de inasistencias: " +
-                            inscripcion.getInasistencias()
-            );
-
+        if (exito) {
+            if (presente) {
+                System.out.println("Asistencia registrada.");
+            } else {
+                System.out.println("Inasistencia registrada.");
+                facade.imprimirInasistencias(legajo, opcion);
+            }
         } else {
-
-            System.out.println("Respuesta no valida.");
+            System.out.println("Opcion no valida.");
         }
     }
 
@@ -324,50 +202,13 @@ public class Menu {
         int legajo = teclado.nextInt();
         teclado.nextLine();
 
-        Alumno alumno = universidad.buscarAlumnoPorLegajo(legajo);
-
-        if (alumno == null) {
-
-            System.out.println("Alumno no encontrado.");
+        if (!facade.mostrarInscripcionesAlumno(legajo)) {
             return;
-        }
-
-        if (alumno.getInscripciones().isEmpty()) {
-
-            System.out.println(
-                    "El alumno no esta inscripto en ninguna materia."
-            );
-
-            return;
-        }
-
-        System.out.println();
-        System.out.println("Materias del alumno:");
-
-        for (int i = 0; i < alumno.getInscripciones().size(); i++) {
-
-            Inscripcion inscripcion =
-                    alumno.getInscripciones().get(i);
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            inscripcion.getMateria().getNombre()
-            );
         }
 
         System.out.print("Seleccione una materia: ");
         int opcionMateria = teclado.nextInt();
         teclado.nextLine();
-
-        if (opcionMateria < 1 ||
-                opcionMateria > alumno.getInscripciones().size()) {
-
-            System.out.println("Materia no valida.");
-            return;
-        }
-
-        Inscripcion inscripcion =
-                alumno.getInscripciones().get(opcionMateria - 1);
 
         System.out.println();
         System.out.println("Seleccione la situacion final:");
@@ -380,48 +221,28 @@ public class Menu {
         teclado.nextLine();
 
         String situacion;
-
         switch (opcionSituacion) {
-
             case 1:
                 situacion = "Regular";
                 break;
-
             case 2:
                 situacion = "Libre";
                 break;
-
             case 3:
                 situacion = "Promocionado";
                 break;
-
             default:
                 System.out.println("Situacion no valida.");
                 return;
         }
 
-        Profesor profesor =
-                inscripcion.getMateria().getProfesor();
+        boolean exito = facade.cargarSituacionFinal(legajo, opcionMateria, situacion);
 
-        profesor.cargarSituacionFinal(
-                inscripcion,
-                situacion
-        );
-
-        System.out.println();
-        System.out.println("Situacion final cargada correctamente.");
-        System.out.println("Alumno: " +
-                alumno.getNombre() + " " +
-                alumno.getApellido());
-
-        System.out.println("Materia: " +
-                inscripcion.getMateria().getNombre());
-
-        System.out.println("Situacion: " +
-                inscripcion.getSituacionFinal());
-
-        System.out.println("Inasistencias: " +
-                inscripcion.getInasistencias());
+        if (exito) {
+            facade.imprimirResumenSituacionFinal(legajo, opcionMateria);
+        } else {
+            System.out.println("Ocurrio un error al cargar la situacion final.");
+        }
     }
 
     private void mostrarAlumnosMateria() {
@@ -429,62 +250,20 @@ public class Menu {
         System.out.println();
         System.out.println("===== ALUMNOS DE UNA MATERIA =====");
 
-        // Primero se selecciona la carrera
-
         System.out.println("Carreras disponibles:");
-
-        for (int i = 0; i < universidad.getCarreras().size(); i++) {
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            universidad.getCarreras().get(i).getNombre()
-            );
-        }
+        facade.mostrarCarrerasDisponibles();
 
         System.out.print("Seleccione una carrera: ");
         int opcionCarrera = teclado.nextInt();
         teclado.nextLine();
 
-        if (opcionCarrera < 1 ||
-                opcionCarrera > universidad.getCarreras().size()) {
-
-            System.out.println("Carrera no valida.");
+        if (!facade.mostrarMateriasPorOpcionCarrera(opcionCarrera)) {
             return;
-        }
-
-        Carrera carrera =
-                universidad.getCarreras().get(opcionCarrera - 1);
-
-        // Luego se selecciona una materia de esa carrera
-
-        System.out.println();
-        System.out.println(
-                "Materias de " + carrera.getNombre() + ":"
-        );
-
-        for (int i = 0; i < carrera.getMaterias().size(); i++) {
-
-            Materia materia = carrera.getMaterias().get(i);
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            materia.getNombre()
-            );
         }
 
         System.out.print("Seleccione una materia: ");
         int opcionMateria = teclado.nextInt();
         teclado.nextLine();
-
-        if (opcionMateria < 1 ||
-                opcionMateria > carrera.getMaterias().size()) {
-
-            System.out.println("Materia no valida.");
-            return;
-        }
-
-        Materia materia =
-                carrera.getMaterias().get(opcionMateria - 1);
 
         System.out.println();
         System.out.println("¿Que desea visualizar?");
@@ -492,85 +271,10 @@ public class Menu {
         System.out.println("2. Alumnos que finalizaron");
         System.out.print("Opcion: ");
 
-        int opcion = teclado.nextInt();
+        int opcionEstado = teclado.nextInt();
         teclado.nextLine();
 
-        boolean encontrado = false;
-
-        System.out.println();
-
-        if (opcion == 1) {
-
-            System.out.println("===== ALUMNOS CURSANDO =====");
-
-            for (Alumno alumno : universidad.getAlumnos()) {
-
-                if (alumno.getCarrera() == carrera) {
-
-                    Inscripcion inscripcion =
-                            alumno.buscarInscripcion(materia);
-
-                    if (inscripcion != null &&
-                            !inscripcion.isFinalizado()) {
-
-                        System.out.println(
-                                "Legajo: " +
-                                        alumno.getLegajo() +
-                                        " | " +
-                                        alumno.getNombre() +
-                                        " " +
-                                        alumno.getApellido()
-                        );
-
-                        encontrado = true;
-                    }
-                }
-            }
-
-        } else if (opcion == 2) {
-
-            System.out.println("===== ALUMNOS QUE FINALIZARON =====");
-
-            for (Alumno alumno : universidad.getAlumnos()) {
-
-                if (alumno.getCarrera() == carrera) {
-
-                    Inscripcion inscripcion =
-                            alumno.buscarInscripcion(materia);
-
-                    if (inscripcion != null &&
-                            inscripcion.isFinalizado()) {
-
-                        System.out.println(
-                                "Legajo: " +
-                                        alumno.getLegajo() +
-                                        " | " +
-                                        alumno.getNombre() +
-                                        " " +
-                                        alumno.getApellido() +
-                                        " | Situacion: " +
-                                        inscripcion.getSituacionFinal() +
-                                        " | Inasistencias: " +
-                                        inscripcion.getInasistencias()
-                        );
-
-                        encontrado = true;
-                    }
-                }
-            }
-
-        } else {
-
-            System.out.println("Opcion no valida.");
-            return;
-        }
-
-        if (!encontrado) {
-
-            System.out.println(
-                    "No hay alumnos para mostrar."
-            );
-        }
+        facade.mostrarAlumnosPorMateriaYEstado(opcionCarrera, opcionMateria, opcionEstado);
     }
 
     private void mostrarMateriasCarrera() {
@@ -579,34 +283,12 @@ public class Menu {
         System.out.println("===== MATERIAS DE UNA CARRERA =====");
 
         System.out.println("Carreras disponibles:");
-
-        for (int i = 0; i < universidad.getCarreras().size(); i++) {
-
-            System.out.println(
-                    (i + 1) + ". " +
-                            universidad.getCarreras().get(i).getNombre()
-            );
-        }
+        facade.mostrarCarrerasDisponibles();
 
         System.out.print("Seleccione una carrera: ");
         int opcion = teclado.nextInt();
         teclado.nextLine();
 
-        if (opcion < 1 ||
-                opcion > universidad.getCarreras().size()) {
-
-            System.out.println("Carrera no valida.");
-            return;
-        }
-
-        Carrera carrera =
-                universidad.getCarreras().get(opcion - 1);
-
-        System.out.println();
-        System.out.println(
-                "Materias de " + carrera.getNombre()
-        );
-
-        carrera.mostrarMaterias();
+        facade.mostrarMateriasDeCarrera(opcion);
     }
 }
